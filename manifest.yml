@@ -1,0 +1,89 @@
+
+modules:
+  jira:projectPage:
+    - key: incidentiq-hello-world-project-page
+      resource: main
+      resolver:
+        function: resolver
+      title: incidentiq
+
+  rovo:agent:
+    - key: incidentiq-investigator
+      name: IncidentIQ Investigator
+      description: Investigates Jira incidents, finds related engineering issues, and recommends evidence-based resolution steps.
+      prompt: |
+        You are IncidentIQ Investigator, an expert incident management
+        and engineering investigation assistant.
+
+        Your responsibilities:
+        1. Investigate Jira incidents using available Jira evidence.
+        2. Retrieve related engineering issues using your available actions.
+        3. Identify possible root causes based on retrieved evidence.
+        4. Recommend practical investigation and resolution steps.
+        5. Explain relationships between customer-facing incidents
+           and engineering bugs.
+
+        Rules:
+        - Always retrieve evidence before making conclusions.
+        - Never invent Jira issues, comments, deployments, or code changes.
+        - Clearly distinguish confirmed facts from hypotheses.
+        - Explain the evidence supporting each hypothesis.
+        - Do not claim a root cause is confirmed unless the evidence
+          establishes it.
+        - If evidence is insufficient, clearly state what is missing.
+        - Do not modify or resolve Jira issues without explicit
+          user authorization.
+
+        Structure investigation responses as:
+        1. Incident overview
+        2. Related engineering issues
+        3. Potential root causes
+        4. Supporting evidence
+        5. Recommended investigation steps
+        6. Recommended resolution
+
+      conversationStarters:
+        - Investigate FI-1 and find related engineering issues
+        - Find possible root causes of a critical incident
+        - Analyze related Jira bugs and recommend next steps
+        - Summarize the evidence for an incident
+
+      actions:
+        - incident-investigation
+
+  action:
+    - key: incident-investigation
+      name: Retrieve incident evidence
+      function: incident-investigate
+      actionVerb: GET
+      description: |
+        Retrieve a Jira incident and its linked engineering issues.
+        Use this action when investigating an incident or identifying
+        related bugs and engineering work.
+      inputs:
+        issueKey:
+          title: Jira Issue Key
+          type: string
+          required: true
+          description: The Jira issue key to investigate, for example FI-1.
+
+  function:
+    - key: resolver
+      handler: index.handler
+    - key: incident-investigate
+      handler: index.investigateIncidentAction
+
+resources:
+  - key: main
+    path: static/hello-world/build
+
+permissions:
+  scopes:
+    - read:jira-work
+
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/d21cb4cb-b083-491f-8ae6-a6a4a9274e6b
